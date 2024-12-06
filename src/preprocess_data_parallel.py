@@ -6,6 +6,8 @@ import time
 import gzip
 import glob
 import multiprocessing
+import pyarrow.parquet as pq
+import pyarrow.json as pa_json
 
 try:
     import nltk
@@ -283,16 +285,30 @@ def merge_datasets(args):
 
 
 def convert_to_jsonl(input_file, temp_dir, json_keys, input_format="json"):
-    # TODO: Add support for other formats
     base_name = os.path.basename(input_file).split(".")[0]
     output_file = os.path.join(temp_dir, f"{base_name}.jsonl")
+    
     if input_format == "json":
+        # Handling for JSON files
         with open(input_file, "r") as f:
             data = json.load(f)
             with open(output_file, "w") as out:
                 for line in data:
                     json.dump({k: line[k] for k in json_keys}, out)
                     out.write("\n")
+    
+    elif input_format == "parquet":
+        # Handling for Parquet files using pyarrow
+        table = pq.read_table(input_file)
+        records = table.to_pandas().to_dict(orient='records')
+        with open(output_file, "w") as out:
+            for record in records:
+                json.dump({k: record[k] for k in json_keys}, out)
+                out.write("\n")
+    
+    else:
+        raise ValueError("Unsupported input format. Please use 'json' or 'parquet'.")
+    
     return output_file
 
 
