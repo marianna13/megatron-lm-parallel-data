@@ -94,10 +94,14 @@ def tokenize_chunk(processed_data_chunk, output_prefix, args):
         tokenized_line = tokenizer.encode(text, add_special_tokens=False, truncation=True, max_length=max_length)
         tokenized_data.append(tokenized_line)
 
-    with open(f"{output_prefix}_tokenized.jsonl", 'a') as f:
+    output_file = f"{output_prefix}_tokenized.jsonl"
+    
+    with open(output_file, 'a') as f:
         for tokens in tokenized_data:
             json.dump({"tokens": tokens}, f)
             f.write("\n")
+    
+    print(f"Saved tokenized data to {output_file}")
 
 def merge_datasets(args):
     output_bin_files = {}
